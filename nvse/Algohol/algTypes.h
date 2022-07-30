@@ -48,8 +48,15 @@ public:
 	Quat operator-( const Quat & q )	const	{ Quat out( *this );	return out -= q; }
 	Quat operator*( Quat & q )			const	{ Quat out( *this );	return out *= q; }
 
-	void normalize( void );
-
+	void normalize(void) {
+		float len = sqrtf(w * w + x * x + y * y + z * z);
+		if (len > 0.0f)
+			len = 1.0f / len;
+		else
+			len = 0.0f;
+		w *= len;	x *= len;	y *= len;	z *= len;
+	};
+	
 	union
 	{
 		struct

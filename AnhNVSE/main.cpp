@@ -218,8 +218,7 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*362B*/ REG_CMD(SetZoneOwner);
 
 	// ===== v1.3.0 =====
-	///*362C*/ REG_CMD(RCPAddMenuItem);
-	///*362D*/ REG_CMD(RCPImportImage);
+	/*362C*/ REG_CMD_STR(ArrayToString);
 	
 	
 	return true;

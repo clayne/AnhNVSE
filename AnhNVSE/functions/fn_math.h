@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <algohol/algTypes.h>
+#include <Algohol/algMath.h>
 
 Vector3 V3Lerp(Vector3 vecA, Vector3 vecB, float t) {
 	vecB.x *= t;
@@ -15,101 +16,10 @@ Vector3 V3Lerp(Vector3 vecA, Vector3 vecB, float t) {
 	return vecA + vecB;
 };
 
-//lnk2001 moment
-void V3Normalize(Vector3& v)
-{
-	float len = v.Magnitude();
-	if (len > 0.0f)
-		len = 1.0f / len;
-	else
-		len = 0.0f;
-	v.x *= len;	v.y *= len;	v.z *= len;
-}
-
-Vector3 V3Crossproduct(Vector3 va, Vector3 vb)
-{
-	Vector3 out;
-	out.x = vb.y * va.z - vb.z * va.y;
-	out.y = vb.z * va.x - vb.x * va.z;
-	out.z = vb.x * va.y - vb.y * va.x;
-	return out;
-}
-
-void Quat::normalize(void)
-{
-	float len = sqrtf(w * w + x * x + y * y + z * z);
-	if (len > 0.0f)
-		len = 1.0f / len;
-	else
-		len = 0.0f;
-	w *= len;	x *= len;	y *= len;	z *= len;
-}
-
-Quat fromAxisAngle(Vector3 axis, float angle)
-{
-	V3Normalize(axis);
-	angle /= 2 * 57.2957795131;
-	float s = sinf(angle);
-	return Quat(cosf(angle),
-		axis.x * s,
-		axis.y * s,
-		axis.z * s);
-}
-
-float QDotproduct(Quat q1, Quat q2)
-{
-	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
-}
-
-Quat nlerp(Quat q1, Quat q2, float t)
-{
-	float cosHalfTheta = QDotproduct(q1, q2);
-	if (cosHalfTheta < 0)
-	{
-		q1.w = -q1.w;
-		q1.x = -q1.x;
-		q1.y = -q1.y;
-		q1.z = -q1.z;
-	}
-
-	Quat out = q1 + (q2 - q1) * t;
-	out.normalize();
-	return out;
-}
-
-Quat slerp(Quat q1, Quat q2, float t)
-{
-	q1.normalize();
-	q2.normalize();
-	float cosHalfTheta = QDotproduct(q1, q2);
-
-	if (fabs(cosHalfTheta) >= 1.0f)
-		return q1;
-
-	if (cosHalfTheta < 0)
-	{
-		q1.w = -q1.w;
-		q1.x = -q1.x;
-		q1.y = -q1.y;
-		q1.z = -q1.z;
-	}
-
-	float halfTheta = acosf(cosHalfTheta);
-	float sinHalfTheta = sqrtf(1.0f - cosHalfTheta * cosHalfTheta);
-
-	if (fabs(sinHalfTheta) < 0.001f)
-		return q1 * 0.5f + q2 * 0.5f;
-
-	float ratioA = sinf((1.0f - t) * halfTheta) / sinHalfTheta;
-	float ratioB = sinf(t * halfTheta) / sinHalfTheta;
-	return q1 * ratioA + q2 * ratioB;
-}
-
 float VDotproduct(Vector3 v1, Vector3 v2)
 {
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
-//snig
 
 DEFINE_COMMAND_PLUGIN(V3NormalizeAlt, "", 0, 1, kParams_OneArray);
 DEFINE_COMMAND_PLUGIN(V3CrossproductAlt, "", 0, 2, kParams_TwoArrays);
@@ -133,55 +43,55 @@ DEFINE_COMMAND_PLUGIN(V3MultByScalar, "", 0, 2, kParams_OneArray_OneFloat);
 //#if RUNTIME
 bool Cmd_RadToDeg_Execute(COMMAND_ARGS) {
 	float rad;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &rad)) {
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &rad)) 
 		*result = (rad * 57.2957795131);
-	}
+	
 	return true;
 }
 
 bool Cmd_DegToRad_Execute(COMMAND_ARGS) {
 	float deg;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &deg)) {
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &deg)) 
 		*result = (deg * 0.0174532925);
-	}
+	
 	return true;
 }
 
 bool Cmd_GetAngleQuadrant_Execute(COMMAND_ARGS) {
+	*result = 0;
 	float angle;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &angle)) {
-		int tempAngle = (int)ceil(angle);
-		tempAngle %= 360;
-		if (tempAngle < 0) tempAngle += 360;
-		*result = (tempAngle / 90) % 4 + 1;
-		return true;
-	}
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &angle)) return true;
+
+	int tempAngle = (int)ceil(angle);
+	tempAngle %= 360;
+	if (tempAngle < 0) tempAngle += 360;
+	*result = (tempAngle / 90) % 4 + 1;
+	
 	return true;
 }
 
 bool Cmd_Sinh_Execute(COMMAND_ARGS) {
 	float angle;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &angle)) {
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &angle)) 
 		*result = sinh(angle);
-	}
+	
 	return true;
 }
 
 bool Cmd_Cosh_Execute(COMMAND_ARGS) {
 	double angle;
 	int inRad;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &angle, &inRad)) {
-		 *result = cosh(angle);
-	}
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &angle, &inRad)) 
+		*result = cosh(angle);
 	return true;
 }
 
 bool Cmd_Tanh_Execute(COMMAND_ARGS) {
 	double angle;
 	int inRad;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &angle, &inRad)) {
+	if (ExtractArgsEx(EXTRACT_ARGS_EX, &angle, &inRad)) 
 		*result = tanh(angle);
-	}
+
 	return true;
 }
 
