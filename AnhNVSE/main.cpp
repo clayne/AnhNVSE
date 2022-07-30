@@ -101,12 +101,12 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 
 bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 {
-	_MESSAGE("query");
+	//_MESSAGE("query");
 
 	// fill out the info structure
 	info->infoVersion = PluginInfo::kInfoVersion;
 	info->name = "AnhNVSE";
-	info->version = 122;
+	info->version = 123;
 
 	// version checks
 	if (nvse->nvseVersion < PACKED_NVSE_VERSION)
@@ -143,7 +143,7 @@ bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 
 bool NVSEPlugin_Load(const NVSEInterface* nvse)
 {
-	_MESSAGE("load");
+	_MESSAGE("AnhNVSE loaded");
 
 
 	if (!nvse->isEditor)
@@ -216,9 +216,10 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*3629*/ REG_CMD(GetZoneLevel);
 	/*362A*/ REG_CMD(SetZoneMinLevel);
 	/*362B*/ REG_CMD(SetZoneOwner);
-
-	// ===== v1.3.0 =====
 	/*362C*/ REG_CMD_STR(ArrayToString);
+
+	// ===== v1.2.3 =====
+	
 	
 	
 	return true;
