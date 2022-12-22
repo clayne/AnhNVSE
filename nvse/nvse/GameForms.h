@@ -584,6 +584,15 @@ public:
 
 };
 
+// Source: JIP - GameForms.h L360
+struct ConditionList : tList<Condition>
+{
+	__forceinline bool Evaluate(TESObjectREFR* runOnRef, TESForm* arg2, bool* result, bool arg4)
+	{
+		return ThisCall<bool>(0x680C60, this, runOnRef, arg2, result, arg4);
+	}
+};
+
 class TESObject : public TESForm
 {
 public:
@@ -1694,53 +1703,62 @@ public:
 	String	path;	// 4
 };
 
-// 4+
+// Source: JIP - GameForms.h L1207
+// 24
 class BGSQuestObjective
 {
 public:
-	BGSQuestObjective();
-	~BGSQuestObjective();
+	virtual void* Destroy(bool noDealloc);
 
-	enum {
+	enum
+	{
 		eQObjStatus_displayed = 1,
 		eQObjStatus_completed = 2,
 	};
 
-	struct TargetData 
+	struct TargetData
 	{
-		TESObjectREFR*	target;
+		TESObjectREFR* target;
 		UInt8			flags;
 		UInt8			filler[3];
 	};
 
-	struct ParentSpaceNode;
+	struct ParentSpaceNode {};
+
 	struct TeleportLink
 	{
-		TESObjectREFR*	door;
-		UInt32			unk004[3];
-	};	// 016
+		TESObjectREFR* door;
+		UInt32			unk04[3];
+	};
 
 	struct Target
 	{
-		UInt8							byt000;				// 000
-		UInt8							fill[3];			// 001
-		tList<Condition*>				conditions;			// 004
-		TESObjectREFR*					target;				// 00C
-		BSSimpleArray<ParentSpaceNode>	parentSpaceNodes;	// 010 - The four fields coud be a struct
-		BSSimpleArray<TeleportLink>		teleportLinks;		// 020
-		UInt32							unk030;				// 030
-		UInt32							unk034;				// 034
+		struct Data
+		{
+			BSSimpleArray<ParentSpaceNode>	parentSpaceNodes;	// 00
+			BSSimpleArray<TeleportLink>		teleportLinks;		// 10
+			UInt32							unk20[6];			// 20
+		};
+
+		UInt8							byte00;			// 00
+		UInt8							pad01[3];		// 01
+		ConditionList					conditions;		// 04
+		TESObjectREFR* target;		// 0C
+		Data							data;			// 10
 	};
 
 	UInt32			objectiveId;	// 004 Objective Index in the GECK
 	String			displayText;	// 008
-	TESQuest*		quest;			// 010
-	tList<Target*>	targets;		// 014
+	TESQuest* quest;			// 010
+	tList<Target>	targets;		// 014
 	UInt32			unk01C;			// 01C
 	UInt32			status;			// 020	bit0 = displayed, bit 1 = completed. 1 and 3 significant. If setting it to 3, quest flags bit1 will be set also.
-
-	virtual void *	Destroy(bool noDealloc);
 };
+
+// Source: JIP - GameForms.h L1257
+typedef BGSQuestObjective::Target ObjectiveTarget;
+typedef BGSQuestObjective::Target::Data ObjectiveTargetData;
+
 
 class BGSOpenCloseForm
 {
@@ -3167,6 +3185,12 @@ public:
 };
 
 STATIC_ASSERT(sizeof(TESAmmo) == 0xDC);
+
+// Source: JIP - GameForms.h L2967
+class TESCaravanCard : public TESBoundObject
+{
+public:
+};
 
 class BSFaceGenNiNode;
 

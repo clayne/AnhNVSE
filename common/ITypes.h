@@ -311,6 +311,7 @@ public:
 	Vector3 &	operator+=(const Vector3 & rhs)	{ x += rhs.x; y += rhs.y; z += rhs.z; return *this; }
 	Vector3 &	operator-=(const Vector3 & rhs)	{ x -= rhs.x; y -= rhs.y; z -= rhs.z; return *this; }
 	Vector3 &	operator*=(const Vector3 & rhs)	{ x *= rhs.x; y *= rhs.y; z *= rhs.z; return *this; }
+	Vector3 &	operator*=(const float& t) { x *= t; y *= t; z *= t; return *this; }
 	Vector3 &	operator/=(const Vector3 & rhs)	{ x /= rhs.x; y /= rhs.y; z /= rhs.z; return *this; }
 
 	union
@@ -336,6 +337,11 @@ inline Vector3 operator-(const Vector3 & lhs, const Vector3 & rhs)
 inline Vector3 operator*(const Vector3 & lhs, const Vector3 & rhs)
 {
 	return Vector3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
+}
+
+inline Vector3 operator*(const Vector3& lhs, const float& t)
+{
+	return Vector3(lhs.x * t, lhs.y * t, lhs.z * t);
 }
 
 inline Vector3 operator/(const Vector3 & lhs, const Vector3 & rhs)

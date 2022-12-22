@@ -304,23 +304,24 @@ public:
 
 };	// 0AC
 
-#if 0
-
-// F0
-class SceneGraph : public NiNode
+// Source: JIP - netimmerse.h L1844
+class BSSceneGraph : public NiNode
 {
 public:
-	SceneGraph();
-	~SceneGraph();
-
-	NiCamera* camera;			// 0DC
-	UInt32				unk0E0;				// 0E0
-	NiCullingProcess* cullingProcess;	// 0E4
-	UInt32				unk0E8;				// 0E8
-	float				cameraFOV;			// 0EC
+	/*100*/virtual void		Unk_40(void);
+	/*104*/virtual void		Unk_41(void);
 };
 
-STATIC_ASSERT(sizeof(SceneGraph) == 0x0F0);
+// C0
+class SceneGraph : public BSSceneGraph
+{
+public:
+	NiCamera* camera;			// AC
+	UInt32				unkB0;				// B0
+	NiCullingProcess* cullingProc;		// B4
+	UInt32				isMinFarPlaneDist;	// B8 The farplane is set to 20480.0 when the flag is true. Probably used for interiors.
+	float				cameraFOV;			// BC
+};
 
 // E0
 class BSTempNodeManager : public NiNode
@@ -550,20 +551,23 @@ public:
 	UInt8				pad12D[3];	// 12D
 };
 
-// 124
+// Source: JIP - netimmerse.h L1371
+// 114
 class NiCamera : public NiAVObject
 {
 public:
-	NiCamera();
-	~NiCamera();
+	float			worldToCam[4][4];	// 09C
+	NiFrustum		frustum;			// 0DC
+	float			minNearPlaneDist;	// 0F8
+	float			maxFarNearRatio;	// 0FC
+	NiViewport		viewPort;			// 100
+	float			LODAdjust;			// 110
 
-	UInt32		unk0AC[(0xEC - 0xAC) >> 2];	// 0AC
-	NiFrustum	m_kViewFrustum;				// 0EC
-	float		m_fMinNearPlaneDist;		// 108
-	float		m_fMaxFarNearRatio;			// 10C
-	NiViewport	m_kPort;					// 110
-	float		unk120;						// 120
+	__forceinline static NiCamera* Create() { return CdeclCall<NiCamera*>(0xA71430); }
+
+	bool __fastcall WorldToScreen(const NiVector3& worldPos, NiPoint2& scrPos);
 };
+static_assert(sizeof(NiCamera) == 0x114);
 
 // 150
 class BSCubeMapCamera : public NiCamera
@@ -768,5 +772,3 @@ public:
 	UInt8	unk0C4;					// 0C4
 	UInt32	unk0C5[3];				// 0C5
 };
-
-#endif

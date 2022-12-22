@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fn_math.h"
+
 DEFINE_COMMAND_ALT_PLUGIN(UpdateTubeMesh, QuitMeshinWithMeAndUpdateAlready, "", 1, 5, kParams_OneString_OneInt_ThreeArrays);
 
 #if RUNTIME
@@ -32,7 +34,7 @@ bool Cmd_UpdateTubeMesh_Execute(COMMAND_ARGS) {
 	v3.y = elements[1].Number();
 	v3.z = elements[2].Number();
 
-	for (int i = 1; i < numPoints; i++) {
+	for (int i = 1; i < numPoints + 1; i++) {
 		newVec = V3Lerp((V3Lerp(v1, v2, (float)i / numPoints)), (V3Lerp(v2, v3, (float)i / numPoints)), (float)i / numPoints);
 		std::string tempStr(boneName);
 		tempStr.append(std::to_string(i));

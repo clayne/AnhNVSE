@@ -4,23 +4,6 @@
 #include <algohol/algTypes.h>
 #include <Algohol/algMath.h>
 
-Vector3 V3Lerp(Vector3 vecA, Vector3 vecB, float t) {
-	vecB.x *= t;
-	vecB.y *= t;
-	vecB.z *= t;
-
-	vecA.x *= (1.f - t);
-	vecA.y *= (1.f - t);
-	vecA.z *= (1.f - t);
-
-	return vecA + vecB;
-};
-
-float VDotproduct(Vector3 v1, Vector3 v2)
-{
-	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-}
-
 DEFINE_COMMAND_PLUGIN(V3NormalizeAlt, "", 0, 1, kParams_OneArray);
 DEFINE_COMMAND_PLUGIN(V3CrossproductAlt, "", 0, 2, kParams_TwoArrays);
 DEFINE_COMMAND_PLUGIN(QMultQuatQuatAlt, "", 0, 2, kParams_TwoArrays);
@@ -39,6 +22,23 @@ DEFINE_COMMAND_PLUGIN(V3Lerp, "", 0, 3, kParams_TwoArrays_OneFloat)
 DEFINE_COMMAND_PLUGIN(GenerateBezierPoint, "", 0, 4, kParams_ThreeArrays_OneFloat);
 DEFINE_COMMAND_PLUGIN(V3Mult, "", 0, 2, kParams_TwoArrays);
 DEFINE_COMMAND_PLUGIN(V3MultByScalar, "", 0, 2, kParams_OneArray_OneFloat);
+
+Vector3 V3Lerp(Vector3 vecA, Vector3 vecB, float t) {
+	vecB.x *= t;
+	vecB.y *= t;
+	vecB.z *= t;
+
+	vecA.x *= (1.f - t);
+	vecA.y *= (1.f - t);
+	vecA.z *= (1.f - t);
+
+	return vecA + vecB;
+};
+
+inline float VDotproduct(Vector3 v1, Vector3 v2)
+{
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
 
 //#if RUNTIME
 bool Cmd_RadToDeg_Execute(COMMAND_ARGS) {
@@ -95,158 +95,129 @@ bool Cmd_Tanh_Execute(COMMAND_ARGS) {
 	return true;
 }
 
+void Vector3FromNVSEArray(const UInt32& arrID, Vector3& v) {
+	NVSEArrayVar* srcArr = g_arrInterface->LookupArrayByID(arrID);
+	UInt32 srcArrSize = g_arrInterface->GetArraySize(srcArr);
+
+	if (!srcArr || (srcArrSize != 3)) {
+		v.x = 0;
+		v.y = 0;
+		v.z = 0;
+		return;
+	}
+
+	NVSEArrayElement* elements = new NVSEArrayElement[srcArrSize];
+	g_arrInterface->GetElements(srcArr, elements, NULL);
+	v.x = elements[0].Number();
+	v.y = elements[1].Number();
+	v.z = elements[2].Number();
+
+	delete[] elements;
+}
+
+void QuatFromNVSEArray(const UInt32& arrID, Quat& q) {
+	NVSEArrayVar* srcArr = g_arrInterface->LookupArrayByID(arrID);
+	UInt32 srcArrSize = g_arrInterface->GetArraySize(srcArr);
+
+	if (!srcArr || (srcArrSize != 4)) {
+		q.x = 0;
+		q.y = 0;
+		q.z = 0;
+		q.w = 0;
+		return;
+	}
+
+	NVSEArrayElement* elements = new NVSEArrayElement[srcArrSize];
+	g_arrInterface->GetElements(srcArr, elements, NULL);
+	q.x = elements[0].Number();
+	q.y = elements[1].Number();
+	q.z = elements[2].Number();
+	q.w = elements[3].Number();
+
+	delete[] elements;
+}
+
 bool Cmd_V3NormalizeAlt_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 arrID;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &arrID)) {
-		NVSEArrayVar* srcArr = g_arrInterface->LookupArrayByID(arrID);
-		UInt32 srcArrSize = g_arrInterface->GetArraySize(srcArr);
-		if (srcArr && (srcArrSize == 3)) {
-			Vector3 v;
-			NVSEArrayElement* elements = new NVSEArrayElement[srcArrSize];
-			g_arrInterface->GetElements(srcArr, elements, NULL);
-			v.x = elements[0].Number();
-			v.y = elements[1].Number();
-			v.z = elements[2].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &arrID)) return true;
 
-			V3Normalize(v);
-			ArrayElementL newElem[3] = { v.x, v.y, v.z };
-			NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, srcArrSize, scriptObj);
-			g_arrInterface->AssignCommandResult(newArr, result);
+	Vector3 v;
+	Vector3FromNVSEArray(arrID, v);
 
-			delete[] elements;
-		}
-
-	}
+	V3Normalize(v);
+	ArrayElementL newElem[3] = { v.x, v.y, v.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
+	
 	return true;
 }
 
 bool Cmd_V3CrossproductAlt_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 srcID1, srcID2;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(srcID1);
-		NVSEArrayVar* srcArr2 = g_arrInterface->LookupArrayByID(srcID2);
-		UInt32 size1 = g_arrInterface->GetArraySize(srcArr1);
-		UInt32 size2 = g_arrInterface->GetArraySize(srcArr2);
-		if (srcArr1 && srcArr2 && (size1 == 3) && (size2 == 3)) {
-			Vector3 v1, v2;
-			NVSEArrayElement* elements = new NVSEArrayElement[size1];
-			g_arrInterface->GetElements(srcArr1, elements, NULL);
-			v1.x = elements[0].Number();
-			v1.y = elements[1].Number();
-			v1.z = elements[2].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2)) return true;
 
-			g_arrInterface->GetElements(srcArr2, elements, NULL);
-			v2.x = elements[0].Number();
-			v2.y = elements[1].Number();
-			v2.z = elements[2].Number();
+	Vector3 v1, v2;
+	Vector3FromNVSEArray(srcID1, v1);
+	Vector3FromNVSEArray(srcID2, v2);
 
-			Vector3 out = V3Crossproduct(v1, v2);
-			ArrayElementL newElem[3] = { out.x, out.y, out.z };
-			NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
-			g_arrInterface->AssignCommandResult(newArr, result);
-
-			delete[] elements;
-		}
-
-	}
+	Vector3 out = V3Crossproduct(v1, v2);
+	ArrayElementL newElem[3] = { out.x, out.y, out.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
+		
 	return true;
 }
 
 bool Cmd_QMultQuatQuatAlt_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 srcID1, srcID2;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(srcID1);
-		NVSEArrayVar* srcArr2 = g_arrInterface->LookupArrayByID(srcID2);
-		UInt32 size1 = g_arrInterface->GetArraySize(srcArr1);
-		UInt32 size2 = g_arrInterface->GetArraySize(srcArr2);
-		if (srcArr1 && srcArr2 && (size1 == 4) && (size2 == 4)) {
-			Quat q1, q2;
-			NVSEArrayElement* elements = new NVSEArrayElement[size1];
-			g_arrInterface->GetElements(srcArr1, elements, NULL);
-			q1.w = elements[0].Number();
-			q1.x = elements[0].Number();
-			q1.y = elements[0].Number();
-			q1.z = elements[0].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2)) return true;
 
-			g_arrInterface->GetElements(srcArr2, elements, NULL);
-			q2.w = elements[0].Number();
-			q2.x = elements[0].Number();
-			q2.y = elements[0].Number();
-			q2.z = elements[0].Number();
+	Quat q1, q2;
+	QuatFromNVSEArray(srcID1, q1);
+	QuatFromNVSEArray(srcID2, q2);
 
-			Quat out = q1 * q2;
-			ArrayElementL newElem[4] = { out.w, out.x, out.y, out.z };
-			NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 4, scriptObj);
-			g_arrInterface->AssignCommandResult(newArr, result);
+	Quat out = q1 * q2;
+	ArrayElementL newElem[4] = { out.w, out.x, out.y, out.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 4, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-			delete[] elements;
-		}
-
-	}
 	return true;
 }
 
 bool Cmd_QMultQuatVector3Alt_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 srcID1, srcID2;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(srcID1);
-		NVSEArrayVar* srcArr2 = g_arrInterface->LookupArrayByID(srcID2);
-		UInt32 size1 = g_arrInterface->GetArraySize(srcArr1);
-		UInt32 size2 = g_arrInterface->GetArraySize(srcArr2);
-		if (srcArr1 && srcArr2 && (size1 == 4) && (size2 == 3)) {
-			Quat q; Vector3 v;
-			NVSEArrayElement* elements = new NVSEArrayElement[size1];
-			g_arrInterface->GetElements(srcArr1, elements, NULL);
-			q.w = elements[0].Number();
-			q.x = elements[1].Number();
-			q.y = elements[2].Number();
-			q.z = elements[3].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2)) return true;
 
-			g_arrInterface->GetElements(srcArr2, elements, NULL);
-			v.x = elements[0].Number();
-			v.y = elements[1].Number();
-			v.z = elements[2].Number();
+	Quat q; Vector3 v;
 
-			Vector3 out = q * v;
-			ArrayElementL newElem[3] = { out.x, out.y, out.z };
-			NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
-			g_arrInterface->AssignCommandResult(newArr, result);
+	QuatFromNVSEArray(srcID1, q);
+	Vector3FromNVSEArray(srcID2, v);
 
-			delete[] elements;
-		}
+	Vector3 out = q * v;
+	ArrayElementL newElem[3] = { out.x, out.y, out.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-	}
 	return true;
 }
 
 bool Cmd_QNormalizeAlt_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 srcID;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &srcID)) {
-		NVSEArrayVar* srcArr = g_arrInterface->LookupArrayByID(srcID);
-		UInt32 size = g_arrInterface->GetArraySize(srcArr);
-		if (srcArr && (size == 4)) {
-			Quat q;
-			NVSEArrayElement* elements = new NVSEArrayElement[size];
-			g_arrInterface->GetElements(srcArr, elements, NULL);
-			q.w = elements[0].Number();
-			q.x = elements[1].Number();
-			q.y = elements[2].Number();
-			q.z = elements[3].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &srcID)) return true;
 
-			q.normalize();
-			ArrayElementL newElem[4] = { q.w, q.x, q.y, q.z };
-			NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 4, scriptObj);
-			g_arrInterface->AssignCommandResult(newArr, result);
+	Quat q;
+	QuatFromNVSEArray(srcID, q);
 
-			delete[] elements;
-		}
+	q.normalize();
+	ArrayElementL newElem[4] = { q.w, q.x, q.y, q.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 4, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-	}
 	return true;
 }
 
@@ -254,26 +225,16 @@ bool Cmd_QFromAxisAngleAlt_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 srcID;
 	float angle;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &srcID, &angle)) {
-		NVSEArrayVar* srcArr = g_arrInterface->LookupArrayByID(srcID);
-		UInt32 size = g_arrInterface->GetArraySize(srcArr);
-		if (srcArr && (size == 4)) {
-			Vector3 axis;
-			NVSEArrayElement* elements = new NVSEArrayElement[size];
-			g_arrInterface->GetElements(srcArr, elements, NULL);
-			axis.x = elements[0].Number();
-			axis.y = elements[1].Number();
-			axis.z = elements[2].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &srcID, &angle)) return true;
 
-			Quat out = fromAxisAngle(axis, angle);
-			ArrayElementL newElem[4] = { out.w, out.x, out.y, out.z };
-			NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 4, scriptObj);
-			g_arrInterface->AssignCommandResult(newArr, result);
+	Vector3 axis;
+	Vector3FromNVSEArray(srcID, axis);
 
-			delete[] elements;
-		}
+	Quat out = fromAxisAngle(axis, angle);
+	ArrayElementL newElem[4] = { out.w, out.x, out.y, out.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 4, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-	}
 	return true;
 }
 
@@ -282,69 +243,32 @@ bool Cmd_QInterpolateAlt_Execute(COMMAND_ARGS) {
 	UInt32 srcID1, srcID2;
 	float t;
 	int slerpFlag;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2, &t, &slerpFlag)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(srcID1);
-		UInt32 size1 = g_arrInterface->GetArraySize(srcArr1);
-		NVSEArrayVar* srcArr2 = g_arrInterface->LookupArrayByID(srcID2);
-		UInt32 size2 = g_arrInterface->GetArraySize(srcArr2);
-		if (srcArr1 && srcArr2 && (size1 == 4) && (size2 == 4)) {
-			Quat q1, q2;
-			NVSEArrayElement* elements = new NVSEArrayElement[size1];
-			g_arrInterface->GetElements(srcArr1, elements, NULL);
-			q1.w = elements[0].Number();
-			q1.x = elements[1].Number();
-			q1.y = elements[2].Number();
-			q1.z = elements[3].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2, &t, &slerpFlag)) return true;
 
-			g_arrInterface->GetElements(srcArr2, elements, NULL);
-			q2.w = elements[0].Number();
-			q2.x = elements[1].Number();
-			q2.y = elements[2].Number();
-			q2.z = elements[3].Number();
+	Quat q1, q2, out;
+	QuatFromNVSEArray(srcID1, q1);
+	QuatFromNVSEArray(srcID2, q2);
 
-			Quat out;
-			if (!slerpFlag)
-				out = nlerp(q1, q2, t);
-			else
-				out = slerp(q1, q2, t);
+	out = (slerpFlag) ? slerp(q1, q2, t) : nlerp(q1, q2, t);
 
-			ArrayElementL newElem[4] = { out.w, out.x, out.y, out.z };
-			NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 4, scriptObj);
-			g_arrInterface->AssignCommandResult(newArr, result);
+	ArrayElementL newElem[4] = { out.w, out.x, out.y, out.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 4, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-			delete[] elements;
-		}
-
-	}
 	return true;
 }
 
 bool Cmd_V3Dotproduct_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 srcID1, srcID2;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(srcID1);
-		UInt32 size1 = g_arrInterface->GetArraySize(srcArr1);
-		NVSEArrayVar* srcArr2 = g_arrInterface->LookupArrayByID(srcID2);
-		UInt32 size2 = g_arrInterface->GetArraySize(srcArr2);
-		if (srcArr1 && srcArr2 && (size1 == 3) && (size2 == 3)) {
-			Vector3 v1, v2;
-			NVSEArrayElement* elements = new NVSEArrayElement[size1];
-			g_arrInterface->GetElements(srcArr1, elements, NULL);
-			v1.x = elements[0].Number();
-			v1.y = elements[1].Number();
-			v1.z = elements[2].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &srcID1, &srcID2)) return true;
 
-			g_arrInterface->GetElements(srcArr2, elements, NULL);
-			v2.x = elements[0].Number();
-			v2.y = elements[1].Number();
-			v2.z = elements[2].Number();
-			*result = VDotproduct(v1, v2);
+	Vector3 v1, v2;
+	Vector3FromNVSEArray(srcID1, v1);
+	Vector3FromNVSEArray(srcID2, v2);
 
-			delete[] elements;
-		}
+	*result = VDotproduct(v1, v2);
 
-	}
 	return true;
 }
 
@@ -352,34 +276,18 @@ bool Cmd_GenerateBezierPoint_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 arrID1, arrID2, arrID3;
 	float t;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &arrID1, &arrID2, &arrID3, &t)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(arrID1);
-		NVSEArrayVar* srcArr2 = g_arrInterface->LookupArrayByID(arrID2);
-		NVSEArrayVar* srcArr3 = g_arrInterface->LookupArrayByID(arrID3);
-		Vector3 v1, v2, v3, newVec;
-		NVSEArrayElement* elements = new NVSEArrayElement[3];
-		g_arrInterface->GetElements(srcArr1, elements, NULL);
-		v1.x = elements[0].Number();
-		v1.y = elements[1].Number();
-		v1.z = elements[2].Number();
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &arrID1, &arrID2, &arrID3, &t)) return true;
 
-		g_arrInterface->GetElements(srcArr2, elements, NULL);
-		v2.x = elements[0].Number();
-		v2.y = elements[1].Number();
-		v2.z = elements[2].Number();
+	Vector3 v1, v2, v3, newVec;
+	Vector3FromNVSEArray(arrID1, v1);
+	Vector3FromNVSEArray(arrID2, v2);
+	Vector3FromNVSEArray(arrID3, v3);
 
-		g_arrInterface->GetElements(srcArr3, elements, NULL);
-		v3.x = elements[0].Number();
-		v3.y = elements[1].Number();
-		v3.z = elements[2].Number();
+	newVec = V3Lerp((V3Lerp(v1, v2, t)), (V3Lerp(v2, v3, t)), t);
+	ArrayElementL newElem[3] = { newVec.x, newVec.y, newVec.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-		newVec = V3Lerp((V3Lerp(v1, v2, t)), (V3Lerp(v2, v3, t)), t);
-		ArrayElementL newElem[3] = { newVec.x, newVec.y, newVec.z };
-		NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
-		g_arrInterface->AssignCommandResult(newArr, result);
-
-		delete[] elements;
-	}
 	return true;
 }
 
@@ -387,61 +295,35 @@ bool Cmd_V3Lerp_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 arrID1, arrID2;
 	float t;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &arrID1, &arrID2, &t)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(arrID1);
-		NVSEArrayVar* srcArr2 = g_arrInterface->LookupArrayByID(arrID2);
-		UInt32 size1 = g_arrInterface->GetArraySize(srcArr1);
-		UInt32 size2 = g_arrInterface->GetArraySize(srcArr2);
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &arrID1, &arrID2, &t)) return true;
 
-		Vector3 v1, v2;
-		NVSEArrayElement* elements = new NVSEArrayElement[3];
-		g_arrInterface->GetElements(srcArr1, elements, NULL);
-		v1.x = elements[0].Number();
-		v1.y = elements[1].Number();
-		v1.z = elements[2].Number();
+	Vector3 v1, v2, out;
+	Vector3FromNVSEArray(arrID1, v1);
+	Vector3FromNVSEArray(arrID2, v2);
 
-		g_arrInterface->GetElements(srcArr2, elements, NULL);
-		v2.x = elements[0].Number();
-		v2.y = elements[1].Number();
-		v2.z = elements[2].Number();
+	out = V3Lerp(v1, v2, t);
 
-		Vector3 lerpVec = V3Lerp(v1, v2, t);
+	ArrayElementL newElem[3] = { out.x, out.y, out.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-		ArrayElementL newElem[3] = { lerpVec.x, lerpVec.y, lerpVec.z };
-		NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
-		g_arrInterface->AssignCommandResult(newArr, result);
-
-		delete[] elements;
-	}
 	return true;
 }
 
 bool Cmd_V3Mult_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 arrID1, arrID2;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &arrID1, &arrID2)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(arrID1);
-		NVSEArrayVar* srcArr2 = g_arrInterface->LookupArrayByID(arrID2);
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &arrID1, &arrID2)) return true;
 
-		Vector3 v1, v2;
-		NVSEArrayElement* elements = new NVSEArrayElement[3];
-		g_arrInterface->GetElements(srcArr1, elements, NULL);
-		v1.x = elements[0].Number();
-		v1.y = elements[1].Number();
-		v1.z = elements[2].Number();
+	Vector3 v1, v2, out;
+	Vector3FromNVSEArray(arrID1, v1);
+	Vector3FromNVSEArray(arrID2, v2);
 
-		g_arrInterface->GetElements(srcArr2, elements, NULL);
-		v2.x = elements[0].Number();
-		v2.y = elements[1].Number();
-		v2.z = elements[2].Number();
+	out = v1 * v2;
+	ArrayElementL newElem[3] = { out.x, out.y, out.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-		Vector3 newVec = v1 * v2;
-		ArrayElementL newElem[3] = { newVec.x, newVec.y, newVec.z };
-		NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
-		g_arrInterface->AssignCommandResult(newArr, result);
-
-		delete[] elements;
-	}
 	return true;
 }
 
@@ -449,25 +331,16 @@ bool Cmd_V3MultByScalar_Execute(COMMAND_ARGS) {
 	*result = 0;
 	UInt32 arrID;
 	float t;
-	if (ExtractArgsEx(EXTRACT_ARGS_EX, &arrID, &t)) {
-		NVSEArrayVar* srcArr1 = g_arrInterface->LookupArrayByID(arrID);
+	if (!ExtractArgsEx(EXTRACT_ARGS_EX, &arrID, &t)) return true;
 
-		Vector3 v1, newVec;
-		NVSEArrayElement* elements = new NVSEArrayElement[3];
-		g_arrInterface->GetElements(srcArr1, elements, NULL);
-		v1.x = elements[0].Number();
-		v1.y = elements[1].Number();
-		v1.z = elements[2].Number();
+	Vector3 v, out;
+	Vector3FromNVSEArray(arrID, v);
 
-		newVec.x *= abs(t);
-		newVec.y *= abs(t);
-		newVec.z *= abs(t);
-		ArrayElementL newElem[3] = { newVec.x, newVec.y, newVec.z };
-		NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
-		g_arrInterface->AssignCommandResult(newArr, result);
+	out = v * t;
+	ArrayElementL newElem[3] = { out.x, out.y, out.z };
+	NVSEArrayVar* newArr = g_arrInterface->CreateArray(newElem, 3, scriptObj);
+	g_arrInterface->AssignCommandResult(newArr, result);
 
-		delete[] elements;
-	}
 	return true;
 }
 

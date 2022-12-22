@@ -1,5 +1,7 @@
 #pragma once
 
+// Source: JIP - internal/utility.h
+
 #define IS_TYPE(form, type) (*(UInt32*)form == kVtbl_##type)
 #define GameHeapAlloc(size) ThisStdCall<void*>(0xAA3E40, (void*)0x11F6238, size)
 

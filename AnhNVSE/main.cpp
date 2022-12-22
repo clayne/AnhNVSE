@@ -52,7 +52,6 @@ bool (*ExtractFormatStringArgs)(UInt32 fmtStringPos, char* buffer, COMMAND_ARGS_
 #include "functions/fn_inventory.h"
 #include "functions/fn_miscref.h"
 #include "functions/fn_misc.h"
-#include "functions/fn_rcpaint.h"
 
 // This is a message handler for nvse events
 // With this, plugins can listen to messages such as whenever the game loads
@@ -61,7 +60,7 @@ void MessageHandler(NVSEMessagingInterface::Message* msg)
 	switch (msg->type)
 	{
 	case NVSEMessagingInterface::kMessage_DeferredInit:
-		Console_Print("AnhNVSE v1.2.2");
+		Console_Print("AnhNVSE v1.3.0");
 
 		break;
 	case NVSEMessagingInterface::kMessage_SaveGame:
@@ -106,7 +105,7 @@ bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 	// fill out the info structure
 	info->infoVersion = PluginInfo::kInfoVersion;
 	info->name = "AnhNVSE";
-	info->version = 123;
+	info->version = 130;
 
 	// version checks
 	if (nvse->nvseVersion < PACKED_NVSE_VERSION)
@@ -149,19 +148,17 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	if (!nvse->isEditor)
 	{
 		g_pluginHandle = nvse->GetPluginHandle();
-
 		g_nvseInterface = (NVSEInterface*)nvse;
-
 		g_stringvarInterface = (NVSEStringVarInterface*)nvse->QueryInterface(kInterface_StringVar);
 		g_arrInterface = (NVSEArrayVarInterface*)nvse->QueryInterface(kInterface_ArrayVar);
-		ExtractFormatStringArgs = g_script->ExtractFormatStringArgs;
 		g_messagingInterface = (NVSEMessagingInterface*)nvse->QueryInterface(kInterface_Messaging);
 		g_messagingInterface->RegisterListener(g_pluginHandle, "NVSE", MessageHandler);
-
 		g_script = (NVSEScriptInterface*)nvse->QueryInterface(kInterface_Script);
-		ExtractArgsEx = g_script->ExtractArgsEx;
-
 		g_dataHandler = (DataHandler*)nvse->QueryInterface(kInterface_Data);
+
+		ExtractArgsEx = g_script->ExtractArgsEx;
+		ExtractFormatStringArgs = g_script->ExtractFormatStringArgs;
+
 	}
 	
 	nvse->SetOpcodeBase(0x3600);
@@ -218,8 +215,8 @@ bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	/*362B*/ REG_CMD(SetZoneOwner);
 	/*362C*/ REG_CMD_STR(ArrayToString);
 
-	// ===== v1.2.3 =====
-	
+	// ===== v1.3.0 =====
+	/*362D*/ REG_CMD(GetCameraFOV);
 	
 	
 	return true;

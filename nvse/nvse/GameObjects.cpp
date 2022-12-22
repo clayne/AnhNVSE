@@ -49,17 +49,10 @@ ScriptEventList* TESObjectREFR::GetEventList() const
 	return nullptr;
 }
 
-PlayerCharacter** g_thePlayer = (PlayerCharacter **)0x011DEA3C;
-
-PlayerCharacter* PlayerCharacter::GetSingleton()
-{
-	return *g_thePlayer;
-}
-
-QuestObjectiveTargets* PlayerCharacter::GetCurrentQuestObjectiveTargets()
-{
-	return (QuestObjectiveTargets *)ThisStdCall(s_PlayerCharacter_GetCurrentQuestTargets, this);
-}
+//QuestObjectiveTargets* PlayerCharacter::GetCurrentQuestObjectiveTargets()
+//{
+//	return (QuestObjectiveTargets *)ThisStdCall(s_PlayerCharacter_GetCurrentQuestTargets, this);
+//}
 
 TESContainer* TESObjectREFR::GetContainer()
 {
@@ -81,7 +74,7 @@ bool TESObjectREFR::IsMapMarker()
 }
 
 // Less worse version as used by some modders 
-bool PlayerCharacter::SetSkeletonPath_v1c(const char* newPath)
+/*bool PlayerCharacter::SetSkeletonPath_v1c(const char* newPath)
 {
 	if (!bThirdPerson) {
 		// ###TODO: enable in first person
@@ -89,7 +82,7 @@ bool PlayerCharacter::SetSkeletonPath_v1c(const char* newPath)
 	}
 
 	return true;
-}
+}*/
 
 bool TESObjectREFR::Update3D_v1c()
 {
@@ -109,7 +102,7 @@ bool TESObjectREFR::Update3D_v1c()
 }
 
 // Current basically not functioning version, but should show some progress in the end.. I hope
-bool PlayerCharacter::SetSkeletonPath(const char* newPath)
+/*bool PlayerCharacter::SetSkeletonPath(const char* newPath)
 {
 	if (!bThirdPerson) {
 		// ###TODO: enable in first person
@@ -161,10 +154,10 @@ bool PlayerCharacter::SetSkeletonPath(const char* newPath)
 	*g_1stPersonCameraNode = cameraNode;
 
 	AnimateNiNode();*/
-#endif
-#endif
-	return true;
-}
+//#endif
+//#endif
+//	return true;
+//} 
 
 bool TESObjectREFR::Update3D()
 {
@@ -208,17 +201,14 @@ TESForm* GetPermanentBaseForm(TESObjectREFR* thisObj)	// For LevelledForm, find 
 	return NULL;
 }
 
-void Actor::EquipItem(TESForm * objType, UInt32 equipCount, ExtraDataList* itemExtraList, UInt32 unk3, bool lockEquip, UInt32 unk5)
+PlayerCharacter** g_thePlayer = (PlayerCharacter**)0x011DEA3C;
+
+PlayerCharacter* PlayerCharacter::GetSingleton()
 {
-	ThisStdCall(s_Actor_EquipItem, this, objType, equipCount, itemExtraList, unk3, lockEquip, unk5);
+	return *g_thePlayer;
 }
 
-void Actor::UnequipItem(TESForm* objType, UInt32 unk1, ExtraDataList* itemExtraList, UInt32 unk3, bool lockUnequip, UInt32 unk5)
-{
-	ThisStdCall(s_Actor_UnequipItem, this, objType, unk1, itemExtraList, unk3, lockUnequip, unk5);
-}
-
-EquippedItemsList Actor::GetEquippedItems()
+/*EquippedItemsList Actor::GetEquippedItems()
 {
 	EquippedItemsList itemList;
 	ExtraContainerDataArray outEntryData;
@@ -233,9 +223,9 @@ EquippedItemsList Actor::GetEquippedItems()
 	}
 
 	return itemList;
-}
+}*/
 
-ExtraContainerDataArray	Actor::GetEquippedEntryDataList()
+/*ExtraContainerDataArray	Actor::GetEquippedEntryDataList()
 {
 	ExtraContainerDataArray itemArray;
 	ExtraContainerExtendDataArray outExtendData;
@@ -257,7 +247,7 @@ ExtraContainerExtendDataArray	Actor::GetEquippedExtendDataList()
 		xChanges->GetAllEquipped(itemArray, outExtendData);
 
 	return outExtendData;
-}
+}*/
 
 bool TESObjectREFR::GetInventoryItems(InventoryItemsMap &invItems)
 {

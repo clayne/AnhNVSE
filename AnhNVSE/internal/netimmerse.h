@@ -1,59 +1,9 @@
 #pragma once
 
+// Source: JIP - netimmerse.cpp
+
 #define CALL_EAX(addr) __asm mov eax, addr __asm call eax
 #define ADDR_ReturnThis			0x6815C0
-
-class NiGeometryData : public NiObject
-{
-public:
-	virtual void	Unk_23(UInt32 arg);
-	virtual void	Unk_24(void);
-	virtual void	Unk_25(void);
-	virtual void	Unk_26(void);
-	virtual bool	Unk_27(UInt32 arg);
-	virtual void	Unk_28(void);
-
-	UInt16					numVertices;	// 08
-	UInt16					word0A;			// 0A
-	UInt16					word0C;			// 0C
-	UInt16					word0E;			// 0E
-	NiSphere				bounds;			// 10
-	NiVector3* vertices;		// 20
-	//NiVector3* normals;		// 24
-	//NiColorAlpha* vertexColors;	// 28
-	//UVCoord* uvCoords;		// 2C
-	//UInt32					unk30;			// 30
-	//NiGeometryBufferData* bufferData;	// 34
-	//UInt8					byte38;			// 38
-	//UInt8					byte39;			// 39
-	//UInt8					byte3A;			// 3A
-	//UInt8					byte3B;			// 3B
-	//UInt8					byte3C;			// 3C
-	//UInt8					pad3D[3];		// 3D
-};
-//STATIC_ASSERT(sizeof(NiGeometryData) == 0x40);
-
-class NiGeometry : public NiAVObject
-{
-public:
-	virtual void	Unk_37(UInt32 arg1);
-	virtual void	Unk_38(UInt32 arg1);
-	virtual void	Unk_39(void);
-	virtual void	Unk_3A(void);
-	virtual void	Unk_3B(UInt32 arg1);
-
-	//* alphaProp;		// 9C
-	//NiCullingProperty* cullingProp;	// A0
-	//NiMaterialProperty* materialProp;	// A4
-	//BSShaderProperty* shaderProp;	// A8
-	//NiStencilProperty* stencilProp;	// AC
-	//NiTexturingPropertyJIP* texturingProp;	// B0
-	UInt32					unkB4;			// B4
-	NiGeometryData* geometryData;	// B8
-	//BSDismemberSkinInstance* skinInstance;	// BC
-	//NiShader* shader;		// C0
-};
-//STATIC_ASSERT(sizeof(NiGeometry) == 0xC4);
 
 __declspec(naked) NiAVObject* __fastcall NiNode::GetBlockByName(const char* nameStr)	//	str of NiFixedString
 {

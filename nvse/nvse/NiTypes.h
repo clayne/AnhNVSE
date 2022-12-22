@@ -14,6 +14,28 @@ struct NiRTTI
 	NiRTTI		* parent;
 };
 
+// Source: JIP - netimmerse.h L10
+// 08
+struct NiPoint2
+{
+	float	x, y;
+
+	NiPoint2() {}
+	NiPoint2(float _x, float _y) : x(_x), y(_y) {}
+	NiPoint2(const NiPoint2& rhs) { *this = rhs; }
+	NiPoint2(__m128 rhs) { *this = rhs; }
+
+	inline void operator=(const NiPoint2& rhs) { _mm_storel_pi((__m64*)this, rhs.PS()); }
+	inline void operator=(NiPoint2&& rhs) { _mm_storel_pi((__m64*)this, rhs.PS()); }
+	inline void operator=(__m128 rhs) { _mm_storel_pi((__m64*)this, rhs); }
+
+	inline operator float* () { return &x; }
+
+	inline __m128 PS() const { return _mm_castsi128_ps(_mm_loadu_si64(this)); }
+
+	void Dump() const;
+};
+
 // C
 struct NiVector3
 {

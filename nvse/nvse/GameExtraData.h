@@ -409,6 +409,7 @@ public:
 };
 typedef ExtraContainerChanges::DataArray ExtraContainerDataArray;
 typedef ExtraContainerChanges::ExtendDataArray ExtraContainerExtendDataArray;
+typedef ExtraContainerChanges::EntryData ContChangesEntry;
 
 struct InventoryItemData
 {
@@ -940,4 +941,35 @@ class ExtraDroppedItemList : public BSExtraData
 {
 public:
 	tList<TESObjectREFR> droppedItemList;
+};
+
+// Source: JIP - GameExtraData.h L1123
+// 10
+class ExtraAudioMarker : public BSExtraData
+{
+public:
+	// 34
+	struct Data
+	{
+		TESFullName		fullName;
+		float			layer2TriggerPerc;
+		float			layer3TriggerPerc;
+		UInt32			unk14[4];
+		UInt32			mediaLocCtrlID;
+		UInt32			flags;
+		UInt32			unk2C[2];
+	};
+
+	Data* data;		// 0C
+};
+
+// Source: JIP - GameExtraData.h L1062
+// 10
+class ExtraEncounterZone : public BSExtraData
+{
+public:
+	ExtraEncounterZone();
+	virtual ~ExtraEncounterZone();
+
+	BGSEncounterZone* zone;		// 0C
 };
